@@ -1,7 +1,7 @@
-import { PropTypes } from 'prop-types';
-import React, { Component } from 'react';
-import { Dimensions, View } from 'react-native';
-import { Svg, Path } from 'react-native-svg';
+import { PropTypes } from "prop-types";
+import React, { Component } from "react";
+import { Dimensions, View } from "react-native";
+import { Svg, Path } from "react-native-svg";
 
 function getDifferenceBetweenRectangles(firstRectangle, secondRectangle) {
   const topRightXDiff = Math.abs(firstRectangle.topRight.x - secondRectangle.topRight.x);
@@ -17,23 +17,23 @@ function getDifferenceBetweenRectangles(firstRectangle, secondRectangle) {
   const bottomLeftYDiff = Math.abs(firstRectangle.bottomLeft.y - secondRectangle.bottomLeft.y);
 
   return (
-    topRightXDiff + topRightYDiff
-    + topLeftXDiff + topLeftYDiff
-    + bottomRightXDiff + bottomRightYDiff
-    + bottomLeftXDiff + bottomLeftYDiff
+    topRightXDiff + topRightYDiff + topLeftXDiff + topLeftYDiff + bottomRightXDiff + bottomRightYDiff + bottomLeftXDiff + bottomLeftYDiff
   );
 }
 
 export default class RectangleOverlay extends Component {
   static propTypes = {
     // The rectangle from the scanner native component
-    detectedRectangle: PropTypes.oneOfType([PropTypes.shape({
-      topRight: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
-      topLeft: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
-      bottomRight: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
-      bottomLeft: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
-      dimensions: PropTypes.shape({ height: PropTypes.number, width: PropTypes.number }),
-    }), PropTypes.bool]),
+    detectedRectangle: PropTypes.oneOfType([
+      PropTypes.shape({
+        topRight: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
+        topLeft: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
+        bottomRight: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
+        bottomLeft: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
+        dimensions: PropTypes.shape({ height: PropTypes.number, width: PropTypes.number }),
+      }),
+      PropTypes.bool,
+    ]),
 
     // The preview ratio from the scanner native component (or just 100%x100%)
     previewRatio: PropTypes.shape({
@@ -44,7 +44,6 @@ export default class RectangleOverlay extends Component {
     backgroundColor: PropTypes.string, // The background fill of the rectangle overlay
     borderColor: PropTypes.string, // The border color of the rectangle overlay
     borderWidth: PropTypes.number, // The border width of the rectangle overlay
-
 
     allowDetection: PropTypes.bool, // Finds difference between current and previous rectangle
     onDetectedCapture: PropTypes.func, // A function to call when it has detected a desired rectangle
@@ -63,8 +62,8 @@ export default class RectangleOverlay extends Component {
     detectionCountBeforeCapture: 8,
     detectionCountBeforeUIChange: 3,
     detectedRectangle: false,
-    backgroundColor: 'rgba(255,203,6, 0.3)',
-    borderColor: 'rgb(255,203,6)',
+    backgroundColor: "rgba(255,203,6, 0.3)",
+    borderColor: "rgb(255,203,6)",
     borderWidth: 5,
     detectedBackgroundColor: null,
     detectedBorderColor: null,
@@ -133,22 +132,18 @@ export default class RectangleOverlay extends Component {
       detectedBorderWidth,
     } = this.props;
     if (!detectedRectangle) return null;
-    const {
-      topRight,
-      topLeft,
-      bottomRight,
-      bottomLeft,
-      dimensions,
-    } = detectedRectangle;
-    const deviceWindow = Dimensions.get('window');
+    const { topRight, topLeft, bottomRight, bottomLeft, dimensions } = detectedRectangle;
+    const deviceWindow = Dimensions.get("window");
     const commands = [];
-    const plotCoordNode = (cmds, point, svgCMD) => { cmds.push(`${svgCMD}${point.x},${point.y} `); };
-    plotCoordNode(commands, topLeft, 'M');
-    plotCoordNode(commands, bottomLeft, 'L');
-    plotCoordNode(commands, bottomRight, 'L');
-    plotCoordNode(commands, topRight, 'L');
-    commands.push('Z');
-    const d = commands.join(' ');
+    const plotCoordNode = (cmds, point, svgCMD) => {
+      cmds.push(`${svgCMD}${point.x},${point.y} `);
+    };
+    plotCoordNode(commands, topLeft, "M");
+    plotCoordNode(commands, bottomLeft, "L");
+    plotCoordNode(commands, bottomRight, "L");
+    plotCoordNode(commands, topRight, "L");
+    commands.push("Z");
+    const d = commands.join(" ");
 
     let stroke = borderColor;
     let fill = backgroundColor;
@@ -161,13 +156,28 @@ export default class RectangleOverlay extends Component {
       strokeWidth = detectedBorderWidth || borderWidth;
     }
 
+    // <View style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: 0, backgroundColor: 'rgba(0,0,0,0)' }}>
+    // <View style={{ position: 'absolute', top: previewRatio.marginTop, bottom: 0, right: 0, left: previewRatio.marginLeft, backgroundColor: 'rgba(0,0,0,0)' }}>
+
+    // This code change is from: https://github.com/HarvestProfit/react-native-rectangle-scanner/pull/80
+
     return (
-      <View style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: 0, backgroundColor: 'rgba(0,0,0,0)' }}>
-        <Svg height={deviceWindow.height * previewRatio.height} width={deviceWindow.width * previewRatio.width} viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}>
-          <Path
-            d={d}
-            style={{ fill, stroke, strokeWidth, strokeLinejoin: 'round', strokeLinecap: 'round' }}
-          />
+      <View
+        style={{
+          position: "absolute",
+          top: previewRatio.marginTop,
+          bottom: 0,
+          right: 0,
+          left: previewRatio.marginLeft,
+          backgroundColor: "rgba(0,0,0,0)",
+        }}
+      >
+        <Svg
+          height={deviceWindow.height * previewRatio.height}
+          width={deviceWindow.width * previewRatio.width}
+          viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+        >
+          <Path d={d} style={{ fill, stroke, strokeWidth, strokeLinejoin: "round", strokeLinecap: "round" }} />
         </Svg>
       </View>
     );
